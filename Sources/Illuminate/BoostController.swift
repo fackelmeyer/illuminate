@@ -157,6 +157,8 @@ final class BoostController {
         if active {
             burst()
             startTicking()
+            // Apply a slider or hotkey change now, not after the loop's current sleep.
+            _ = tick()
         } else {
             stopTicking()
             GammaSafety.markClean()
