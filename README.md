@@ -9,6 +9,10 @@ A menu-bar app that unlocks the extra brightness of XDR displays for everyday (S
 
 On a MacBook Pro with a Liquid Retina XDR panel, macOS caps desktop content at 500–600 nit, although the panel sustains 1000 nit full-screen. Illuminate asks WindowServer for EDR headroom and lifts SDR content into it, by up to 2× of the current SDR white.
 
+<p align="center">
+  <img src="docs/menu.png" width="286" alt="Illuminate's menu: boost toggle, level slider, the built-in display boosting 1.60× to about 279 nits, and the Method, Pause Boost and Launch at Login items">
+</p>
+
 ## Requirements
 
 - macOS 14 or later to run; Xcode 27 or later (Swift 6.4) to build
