@@ -61,12 +61,12 @@ final class OverlayTechnique: BoostTechnique {
 /// and leaves a persistent system state that `GammaSafety` must undo.
 final class GammaTechnique: BoostTechnique {
     /// How often to compare the live table with what we wrote.
-    private static let driftCheckInterval: TimeInterval = 5
+    private static let driftCheckInterval: Duration = .seconds(5)
 
     private let trigger: EDRWindow
     private let gamma: GammaController
     private var appliedGain = 1.0
-    private var lastDriftCheck = Date.distantPast
+    private var nextDriftCheck = ContinuousClock.now
 
     init?(screen: NSScreen, display: CGDirectDisplayID) {
         guard let trigger = EDRWindow(role: .trigger, screen: screen) else { return nil }
@@ -97,8 +97,8 @@ final class GammaTechnique: BoostTechnique {
 
     func maintain(screen: NSScreen) {
         trigger.reposition(on: screen)
-        guard appliedGain > 1, Date.now.timeIntervalSince(lastDriftCheck) >= Self.driftCheckInterval else { return }
-        lastDriftCheck = .now
+        guard appliedGain > 1, ContinuousClock.now >= nextDriftCheck else { return }
+        nextDriftCheck = .now + Self.driftCheckInterval
         switch gamma.health() {
         case .ok:
             break

@@ -41,7 +41,7 @@ final class DisplayBooster {
         self.technique = technique
     }
 
-    func setActive(_ active: Bool, now: Date = .now) {
+    func setActive(_ active: Bool, now: ContinuousClock.Instant = .now) {
         guard active != isActive else { return }
         isActive = active
         if active {
@@ -55,7 +55,7 @@ final class DisplayBooster {
     }
 
     /// - Parameter level: boost level in `0...1`; 0 keeps EDR engaged but adds no gain.
-    func tick(screen: NSScreen, level: Double, curve: BoostCurve, now: Date = .now) {
+    func tick(screen: NSScreen, level: Double, curve: BoostCurve, now: ContinuousClock.Instant = .now) {
         guard isActive else { return }
         technique.maintain(screen: screen)
         headroom = Double(screen.maximumExtendedDynamicRangeColorComponentValue)

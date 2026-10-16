@@ -9,7 +9,7 @@ final class BoostController {
     private static let restInterval: Duration = .milliseconds(500)
     private static let burstInterval: Duration = .milliseconds(50)
     /// Sample fast for this long after any change, to apply the gain as soon as headroom arrives.
-    private static let burstDuration: TimeInterval = 10
+    private static let burstDuration: Duration = .seconds(10)
     /// Step for the increase/decrease hotkeys.
     static let levelStep = 0.1
 
@@ -24,7 +24,7 @@ final class BoostController {
     private let curve = BoostCurve()
     private var boosters: [CGDirectDisplayID: DisplayBooster] = [:]
     private var tickTask: Task<Void, Never>?
-    private var burstUntil = Date.distantPast
+    private var burstUntil = ContinuousClock.now
     private var lastStatuses: [DisplayStatus] = []
     private var power: PowerStatus?
 
@@ -165,7 +165,7 @@ final class BoostController {
     }
 
     private func burst() {
-        burstUntil = Date.now + Self.burstDuration
+        burstUntil = .now + Self.burstDuration
     }
 
     private func startTicking() {
@@ -185,7 +185,7 @@ final class BoostController {
 
     /// Samples every display once. Returns the delay until the next sample.
     private func tick() -> Duration {
-        let now = Date.now
+        let now = ContinuousClock.now
         let screens = Dictionary(NSScreen.screens.compactMap { s in s.displayID.map { ($0, s) } }, uniquingKeysWith: { a, _ in a })
         for (id, booster) in boosters {
             guard let screen = screens[id] else { continue }
