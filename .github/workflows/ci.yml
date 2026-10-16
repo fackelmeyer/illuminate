@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    # Swift 6.4 ships with Xcode 27; GitHub labels its runner images by Xcode version.
+    runs-on: xcode-27
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      # Warnings are errors via Package.swift, so a clean build is also the lint gate.
+      - name: Build
+        run: swift build --build-tests
+
+      - name: Test
+        run: swift test --skip-build
+
+      - name: Bundle app
+        run: scripts/bundle.sh
