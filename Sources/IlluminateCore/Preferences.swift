@@ -39,10 +39,10 @@ extension Preferences: Codable {
         isEnabled = (try? container.decode(Bool.self, forKey: .isEnabled)) ?? defaults.isEnabled
         level = min(max((try? container.decode(Double.self, forKey: .level)) ?? defaults.level, 0), 1)
         technique = (try? container.decode(BoostTechniqueKind.self, forKey: .technique)) ?? defaults.technique
-        // An explicit `null` means "rule disabled"; only an absent key falls back to the default.
-        batteryThreshold = container.contains(.batteryThreshold)
-            ? try? container.decodeIfPresent(Int.self, forKey: .batteryThreshold)
-            : defaults.batteryThreshold
+        // An explicit `null` means "rule disabled"; an absent or malformed value keeps the default.
+        batteryThreshold = (try? container.decodeNil(forKey: .batteryThreshold)) == true
+            ? nil
+            : (try? container.decode(Int.self, forKey: .batteryThreshold)) ?? defaults.batteryThreshold
         pauseInLowPowerMode = (try? container.decode(Bool.self, forKey: .pauseInLowPowerMode)) ?? defaults.pauseInLowPowerMode
         reduceDuringPlayback = (try? container.decode(Bool.self, forKey: .reduceDuringPlayback)) ?? defaults.reduceDuringPlayback
     }

@@ -29,6 +29,16 @@ import Testing
         #expect(try JSONDecoder().decode(Preferences.self, from: data).level == 1)
     }
 
+    @Test func `explicit null disables the battery rule`() throws {
+        let data = Data(#"{"batteryThreshold": null}"#.utf8)
+        #expect(try JSONDecoder().decode(Preferences.self, from: data).batteryThreshold == nil)
+    }
+
+    @Test func `malformed battery threshold falls back to the default`() throws {
+        let data = Data(#"{"batteryThreshold": "twenty"}"#.utf8)
+        #expect(try JSONDecoder().decode(Preferences.self, from: data).batteryThreshold == Preferences().batteryThreshold)
+    }
+
     @Test func `unknown technique falls back to overlay`() throws {
         let data = Data(#"{"technique": "native"}"#.utf8)
         #expect(try JSONDecoder().decode(Preferences.self, from: data).technique == .overlay)
