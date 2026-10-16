@@ -70,9 +70,9 @@ The layer is cleared to a 1×1 drawable of value *k* > 1, so WindowServer multip
 - **Power:** By default the boost pauses on battery below 20 % and in Low Power Mode. Both rules can be changed in the menu.
 - **Video:** When a video player holds a display-sleep power assertion, the gain drops to 1. The overlay stays up so headroom isn't lost.
 - **Gamma safety:**
-  - A drift watchdog runs every 5 s and accounts for readback clamping at 1.0.
+  - A drift watchdog runs every 5 s and accounts for readback clamping at 1.0. When macOS or another app replaces the table, Illuminate boosts the new table instead of reverting it.
   - It detects an all-black ("zero gamma") table.
-  - The table is restored at exit, on SIGTERM/SIGINT/SIGHUP/SIGQUIT, and at the next launch if the previous session crashed.
+  - Each display gets its own table back at exit and on SIGTERM/SIGINT/SIGHUP/SIGQUIT. If the previous session crashed, the next launch restores the ColorSync settings.
 - **Overlay hygiene:**
   - The overlay presents at 5 fps; otherwise WindowServer promotes the idle window to direct scan-out and drops the filter.
   - The window fades in only after the first frame is on screen.
@@ -82,7 +82,7 @@ The layer is cleared to a 1×1 drawable of value *k* > 1, so WindowServer multip
 
 ## Engineering notes
 
-- **Logic without AppKit.** Every decision the app makes (gain, engagement, pausing, power rules, preference decoding, install location) lives in `IlluminateCore`, which does not import AppKit. Time and system state are passed in, so the Swift Testing suite runs the state machines deterministically and in parallel.
+- **Logic without AppKit.** The app's decisions (gain, engagement, pausing, power rules, preference decoding, install location) live in `IlluminateCore`, which does not import AppKit. A monotonic clock and the system state are passed in, so the Swift Testing suite runs the state machines deterministically and in parallel.
 - **Thin app shell.** `BoostController` is the single source of truth. Monitors feed it events, and the menu only renders its state.
 - **Concurrency.** The app target is main-actor by default with Approachable Concurrency. The C callbacks (Carbon hotkeys, IOKit power, display reconfiguration) are `nonisolated` and enter the main actor with `MainActor.assumeIsolated`, which traps instead of racing if the assumption ever breaks.
 - **Strict compiler settings.** Swift 6 language mode, `ExistentialAny`, `MemberImportVisibility` and `InternalImportsByDefault` in every target, and warnings as errors. `IlluminateCore` also builds with strict memory safety.
