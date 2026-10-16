@@ -65,11 +65,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .contains { $0.processIdentifier != pid }
     }
 
-    private static var cpuBrand: String {
+    /// Read once: the chip cannot change while the app runs.
+    private static let cpuBrand: String = {
         var size = 0
         guard sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0) == 0, size > 0 else { return "" }
         var buffer = [CChar](repeating: 0, count: size)
         guard sysctlbyname("machdep.cpu.brand_string", &buffer, &size, nil, 0) == 0 else { return "" }
         return String(decoding: buffer.prefix { $0 != 0 }.map(UInt8.init), as: UTF8.self)
-    }
+    }()
 }
