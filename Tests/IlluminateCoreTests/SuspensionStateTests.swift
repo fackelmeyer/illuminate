@@ -43,6 +43,16 @@ import Testing
         #expect(state.insert(.lowBattery) == .unchanged)
     }
 
+    @Test func `primary reason follows declaration order`() {
+        // A Set has no order; the menu must not flip between reasons.
+        var state = SuspensionState()
+        #expect(state.primaryReason == nil)
+        state.insert(.displaysAsleep)
+        state.insert(.lowBattery)
+        state.insert(.screenLocked)
+        #expect(state.primaryReason == .screenLocked)
+    }
+
     @Test func `set(_:active:) inserts and removes`() {
         var state = SuspensionState()
         #expect(state.set(.lowPowerMode, active: true) == .suspended)

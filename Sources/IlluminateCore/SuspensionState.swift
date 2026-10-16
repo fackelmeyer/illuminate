@@ -27,6 +27,12 @@ public struct SuspensionState: Equatable, Sendable {
 
     public var isSuspended: Bool { !reasons.isEmpty }
 
+    /// The reason to show the user: the first active one in declaration order,
+    /// so the menu stays stable while several reasons hold.
+    public var primaryReason: SuspensionReason? {
+        SuspensionReason.allCases.first(where: reasons.contains)
+    }
+
     @discardableResult
     public mutating func insert(_ reason: SuspensionReason) -> Transition {
         let wasSuspended = isSuspended

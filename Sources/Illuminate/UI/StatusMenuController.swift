@@ -175,7 +175,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         let preferences = controller.preferences
         guard controller.hasEligibleDisplay else { return "No XDR display connected" }
         guard preferences.isEnabled else { return "Off" }
-        if let reason = controller.suspension.reasons.first { return "Paused: \(Self.describe(reason))" }
+        if let reason = controller.suspension.primaryReason { return "Paused: \(Self.describe(reason))" }
         if controller.isPlaybackLikely && preferences.reduceDuringPlayback { return "Reduced while video plays" }
         let statuses = controller.statuses
         if statuses.contains(where: { $0.state == .boosting }) {
