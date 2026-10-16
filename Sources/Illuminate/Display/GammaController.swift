@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import Foundation
 import IlluminateCore
@@ -25,7 +26,13 @@ final class GammaController {
     /// Reads the current table as the baseline to scale. Call before the first `apply`.
     @discardableResult
     func captureBaseline() -> Bool {
-        guard let table = read() else { return false }
+        guard var table = read() else { return false }
+        if table.isDegenerate {
+            // Ask ColorSync for the real profile first, so a later restore
+            // writes the user's calibration rather than a linear ramp.
+            CGDisplayRestoreColorSyncSettings()
+            table = read() ?? table
+        }
         // Never adopt a broken table as the reference; fall back to a linear ramp.
         baseline = table.isDegenerate ? .identity(count: table.count) : table
         return true
@@ -51,7 +58,9 @@ final class GammaController {
     /// Writes the captured baseline back. Leaves other displays and apps untouched,
     /// unlike `CGDisplayRestoreColorSyncSettings`.
     func restore() {
-        guard let baseline else { return }
+        // Nothing written means nothing to undo; writing anyway would revert
+        // a profile the user switched to since the baseline was captured.
+        guard let baseline, applied != nil else { return }
         write(baseline)
         applied = nil
     }
@@ -86,8 +95,10 @@ final class GammaController {
 ///
 /// A gamma table is persistent system state: if we die with a scaled table, the
 /// screen stays washed out. Layers of defence:
-/// 1. `atexit` and SIGTERM/SIGINT/SIGHUP/SIGQUIT handlers restore on any orderly exit.
-/// 2. A "dirty" marker in UserDefaults survives crashes; the next launch restores.
+/// 1. SIGTERM/SIGINT/SIGHUP/SIGQUIT quit through AppKit, which writes each display's
+///    own baseline back and leaves other apps' tables alone.
+/// 2. An `atexit` handler restores ColorSync settings if a table is still boosted.
+/// 3. A "dirty" marker in UserDefaults survives crashes; the next launch restores.
 enum GammaSafety {
     fileprivate nonisolated static let dirtyKey = "gamma.dirty"
     private static var signalSources: [any DispatchSourceSignal] = []
@@ -111,12 +122,6 @@ enum GammaSafety {
         UserDefaults.standard.set(false, forKey: dirtyKey)
     }
 
-    static func restoreAll() {
-        guard UserDefaults.standard.bool(forKey: dirtyKey) else { return }
-        CGDisplayRestoreColorSyncSettings()
-        UserDefaults.standard.set(false, forKey: dirtyKey)
-    }
-
     private static func installExitHandlers() {
         guard signalSources.isEmpty else { return }
         atexit(restoreGammaAtExit)
@@ -125,8 +130,7 @@ enum GammaSafety {
             signal(number, SIG_IGN)
             let source = DispatchSource.makeSignalSource(signal: number, queue: .main)
             source.setEventHandler {
-                MainActor.assumeIsolated { restoreAll() }
-                exit(0)
+                MainActor.assumeIsolated { NSApplication.shared.terminate(nil) }
             }
             source.resume()
             signalSources.append(source)

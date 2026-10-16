@@ -103,7 +103,10 @@ final class GammaTechnique: BoostTechnique {
         case .ok:
             break
         case .drifted:
-            Log.gamma.notice("Gamma table of display \(self.gamma.display) was reset by the system; re-applying")
+            // The new table is the system's or another app's choice (a profile switch,
+            // Night Shift); boost that instead of reverting to the old baseline.
+            Log.gamma.notice("Gamma table of display \(self.gamma.display) was replaced; re-capturing and re-applying")
+            gamma.captureBaseline()
             gamma.apply(gain: appliedGain)
         case .degenerate:
             Log.gamma.error("Gamma table of display \(self.gamma.display) is all black; re-capturing")
