@@ -7,6 +7,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     private let controller: BoostController
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     private let menu = NSMenu()
+    private var isMenuOpen = false
 
     private let headerView = HeaderView()
     private let sliderView: SliderView
@@ -36,7 +37,8 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         refresh()
     }
 
-    /// Re-renders every item from the controller's state. Cheap; called on any change.
+    /// Re-renders from the controller's state; called on any change. The menu's
+    /// contents are only rendered while it is open, because `menuWillOpen` catches up.
     func refresh() {
         let preferences = controller.preferences
         let boosting = controller.isBoosting
@@ -46,6 +48,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         image?.isTemplate = true
         statusItem.button?.image = image
 
+        guard isMenuOpen else { return }
         headerView.subtitle = summary
         toggleItem.state = preferences.isEnabled ? .on : .off
         toggleItem.isEnabled = controller.hasEligibleDisplay
@@ -63,7 +66,6 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         }
         lowPowerItem.state = preferences.pauseInLowPowerMode ? .on : .off
         playbackItem.state = preferences.reduceDuringPlayback ? .on : .off
-        refreshLoginItem()
     }
 
     // MARK: Menu construction
@@ -132,15 +134,22 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         menu.addItem(quit)
     }
 
+    /// Only on menu open and after a toggle: the state can change in System Settings,
+    /// but reading it costs a round-trip to the system.
     private func refreshLoginItem() {
-        loginItem.state = LoginItem.isEnabled ? .on : LoginItem.needsApproval ? .mixed : .off
+        let state = LoginItem.state
+        loginItem.state = switch state {
+        case .enabled: .on
+        case .requiresApproval: .mixed
+        case .disabled: .off
+        }
         let location = LoginItem.location
         // Turning it off must always work; turning it on needs a stable install path.
-        loginItem.isEnabled = location.canRegisterLoginItem || LoginItem.isEnabled
+        loginItem.isEnabled = location.canRegisterLoginItem || state == .enabled
         loginItem.toolTip = switch location {
         case .diskImage, .translocated:
             "Move Illuminate to the Applications folder and open it from there to start it at login."
-        case _ where LoginItem.needsApproval:
+        case _ where state == .requiresApproval:
             "Allow Illuminate under System Settings › General › Login Items."
         default:
             "Start Illuminate automatically when you log in."
@@ -214,7 +223,13 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     // MARK: NSMenuDelegate
 
     func menuWillOpen(_ menu: NSMenu) {
+        isMenuOpen = true
         refresh()
+        refreshLoginItem()
+    }
+
+    func menuDidClose(_ menu: NSMenu) {
+        isMenuOpen = false
     }
 
     // MARK: Actions
@@ -244,8 +259,8 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
     }
 
     @objc private func toggleLogin() {
-        LoginItem.setEnabled(!LoginItem.isEnabled)
-        refresh()
+        LoginItem.setEnabled(LoginItem.state != .enabled)
+        refreshLoginItem()
     }
 
     @objc private func showAbout() {

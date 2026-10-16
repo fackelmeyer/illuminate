@@ -6,12 +6,19 @@ import os
 /// Launch at login via `SMAppService.mainApp`. The state always comes from the
 /// system, never from a stored flag, because the user can change it in System Settings.
 enum LoginItem {
-    static var isEnabled: Bool {
-        SMAppService.mainApp.status == .enabled
+    enum State {
+        case enabled
+        case requiresApproval
+        case disabled
     }
 
-    static var needsApproval: Bool {
-        SMAppService.mainApp.status == .requiresApproval
+    /// Each read is a synchronous round-trip to the system, so read it once per use.
+    static var state: State {
+        switch SMAppService.mainApp.status {
+        case .enabled: .enabled
+        case .requiresApproval: .requiresApproval
+        default: .disabled
+        }
     }
 
     static var location: InstallLocation {
@@ -29,7 +36,7 @@ enum LoginItem {
                     return
                 }
                 try SMAppService.mainApp.register()
-                if needsApproval { SMAppService.openSystemSettingsLoginItems() }
+                if state == .requiresApproval { SMAppService.openSystemSettingsLoginItems() }
             } else {
                 try SMAppService.mainApp.unregister()
             }
