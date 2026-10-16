@@ -1,5 +1,10 @@
 # Illuminate
 
+[![CI](https://github.com/fackelmeyer/illuminate/actions/workflows/ci.yml/badge.svg)](https://github.com/fackelmeyer/illuminate/actions/workflows/ci.yml)
+![Swift 6.4](https://img.shields.io/badge/Swift-6.4-F05138?logo=swift&logoColor=white)
+![macOS 14+](https://img.shields.io/badge/macOS-14%2B-000000?logo=apple&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+
 A menu-bar app that unlocks the extra brightness of XDR displays for everyday (SDR) content, using only public macOS APIs.
 
 On a MacBook Pro with a Liquid Retina XDR panel, macOS caps desktop content at 500–600 nit, although the panel sustains 1000 nit full-screen. Illuminate asks WindowServer for EDR headroom and lifts SDR content into it, by up to 2× of the current SDR white.
@@ -56,7 +61,7 @@ The layer is cleared to a 1×1 drawable of value *k* > 1, so WindowServer multip
 **Gamma table.** A 1×1 EDR trigger window keeps headroom granted. Meanwhile Illuminate scales the display's *captured* transfer table with `CGSetDisplayTransferByTable`, so calibration is preserved.
 - Colours stay faithful.
 - HDR video clips, and it conflicts with f.lux.
-- It is disabled on M5 Pro and M5 Max, where macOS ignores gamma tables (FB22273730, still open on macOS 27).
+- It is disabled on M5 Pro and M5 Max, where macOS ignores gamma tables (FB22273730, [Apple Developer Forums](https://developer.apple.com/forums/thread/819331); still open on macOS 27).
 
 ### Robustness
 
@@ -74,6 +79,14 @@ The layer is cleared to a 1×1 drawable of value *k* > 1, so WindowServer multip
   - At most 2 frames are in flight.
   - The window is re-anchored on every tick.
   - It is hidden from VoiceOver.
+
+## Engineering notes
+
+- **Logic without AppKit.** Every decision the app makes (gain, engagement, pausing, power rules, preference decoding, install location) lives in `IlluminateCore`, which does not import AppKit. Time and system state are passed in, so the Swift Testing suite runs the state machines deterministically and in parallel.
+- **Thin app shell.** `BoostController` is the single source of truth. Monitors feed it events, and the menu only renders its state.
+- **Concurrency.** The app target is main-actor by default with Approachable Concurrency. The C callbacks (Carbon hotkeys, IOKit power, display reconfiguration) are `nonisolated` and enter the main actor with `MainActor.assumeIsolated`, which traps instead of racing if the assumption ever breaks.
+- **Strict compiler settings.** Swift 6 language mode, `ExistentialAny`, `MemberImportVisibility` and `InternalImportsByDefault` in every target, and warnings as errors. `IlluminateCore` also builds with strict memory safety.
+- **CI.** Every push and pull request builds, tests and bundles the app on GitHub's Xcode 27 runner.
 
 ## Project layout
 
@@ -97,7 +110,7 @@ Tests/IlluminateCoreTests Swift Testing
 ## Known limitations
 
 - **Screenshots and screen recordings include the boost.** The multiplied pixels clip to SDR white. Excluding the overlay with `sharingType = .none` would turn captures black, because the multiply then applies against an empty window.
-- **Full-screen video and games on macOS 27:** Other XDR tools report that the boost drops after about 10 s in full-screen video or games (BrightIntosh #301, #309). The engagement machine re-requests EDR, but this has not been verified here.
+- **Full-screen video and some games:** Other XDR tools report that the boost fades after about 10 s in full-screen video on the macOS 27 beta ([BrightIntosh #301](https://github.com/niklasr22/BrightIntosh/issues/301)), and that some games withdraw the headroom while they are in front ([BrightIntosh #309](https://github.com/niklasr22/BrightIntosh/issues/309)). The engagement machine re-requests EDR, but this has not been verified here.
 - **Light and wear:** Higher brightness costs battery and adds some LED wear. macOS's own thermal limiter stays in charge. Dark Mode keeps the panel cooler.
 - **Undocumented filter name:** `"multiply"` is an undocumented compositing filter name on a public property.
 
@@ -115,3 +128,15 @@ Run each of these with the boost on for at least 10 minutes:
 - Switching Method back and forth
 
 Repeat the run on M1/M2 (500 nit), M3 (600 nit), M4/M5 (1000 nit outdoor) and M5 Pro/Max (gamma disabled).
+
+## Prior art
+
+Other apps that brighten XDR displays beyond the SDR limit:
+
+- [BrightIntosh](https://github.com/niklasr22/BrightIntosh) (open source, GPL-3.0). Its issue tracker documents many of the macOS edge cases listed above.
+- [Vivid](https://www.getvivid.app/) (commercial)
+- [Lunar](https://lunar.fyi/) (commercial, "XDR Brightness" feature)
+
+## License
+
+[MIT](LICENSE) © 2026 Jonas Fackelmeyer
