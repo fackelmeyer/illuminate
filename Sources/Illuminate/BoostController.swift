@@ -104,8 +104,9 @@ final class BoostController {
     }
 
     var statuses: [DisplayStatus] {
+        // Built-in panel first, then externals by name; the display ID keeps twins stable.
         boosters.values
-            .sorted { $0.profile.isBuiltin && !$1.profile.isBuiltin }
+            .sorted { ($0.profile.isBuiltin ? 0 : 1, $0.profile.name, $0.display) < ($1.profile.isBuiltin ? 0 : 1, $1.profile.name, $1.display) }
             .map(\.status)
     }
 
@@ -131,10 +132,10 @@ final class BoostController {
 
     private func rebuildDisplays(force: Bool = false) {
         let kind = effectiveTechnique
-        var current: [CGDirectDisplayID: NSScreen] = [:]
+        var current: [CGDirectDisplayID: (screen: NSScreen, profile: DisplayProfile)] = [:]
         for screen in NSScreen.screens {
             guard let id = screen.displayID, let profile = screen.profile, profile.isEligible else { continue }
-            current[id] = screen
+            current[id] = (screen, profile)
         }
 
         for (id, booster) in boosters where force || current[id] == nil || booster.kind != kind {
@@ -143,10 +144,8 @@ final class BoostController {
         }
         if boosters.isEmpty { GammaSafety.markClean() }
 
-        for (id, screen) in current where boosters[id] == nil {
-            guard let profile = screen.profile,
-                  let booster = DisplayBooster(display: id, screen: screen, profile: profile, kind: kind)
-            else { continue }
+        for (id, (screen, profile)) in current where boosters[id] == nil {
+            guard let booster = DisplayBooster(display: id, screen: screen, profile: profile, kind: kind) else { continue }
             Log.display.info("Boosting \(profile.name, privacy: .public) (potential headroom \(profile.potentialHeadroom)) with \(kind.rawValue, privacy: .public)")
             boosters[id] = booster
         }

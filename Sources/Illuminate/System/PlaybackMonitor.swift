@@ -18,7 +18,8 @@ final class PlaybackMonitor {
     func start() {
         guard task == nil else { return }
         task = Task { [weak self] in
-            while !Task.isCancelled {
+            // Ends with the monitor instead of polling a nil reference forever.
+            while !Task.isCancelled, self != nil {
                 self?.poll()
                 try? await Task.sleep(for: Self.interval)
             }
