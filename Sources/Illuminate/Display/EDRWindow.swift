@@ -11,9 +11,10 @@ import os
 /// - `.trigger`: a 1×1 point under the rounded display corner whose only job is to keep
 ///   EDR headroom granted, so a scaled gamma table is not clipped at 1.0.
 ///
-/// Windows are created once and kept for the app's lifetime. Repeatedly closing and
-/// re-creating Metal-backed windows has crashed other XDR tools (`EXC_BAD_ACCESS`),
-/// so suspension toggles visibility and the EDR flag instead.
+/// A window lives as long as its display's booster: it is re-created only when the
+/// display reconnects or the method changes. Rapidly closing and re-creating
+/// Metal-backed windows has crashed other XDR tools (`EXC_BAD_ACCESS`), so the
+/// frequent events (suspension, sleep, lock) toggle visibility and the EDR flag instead.
 final class EDRWindow: NSWindow {
     enum Role {
         case overlay

@@ -125,7 +125,7 @@ Run each of these with the boost on for at least 10 minutes:
 - Screen saver
 - Lid close and open
 - Plugging in an external display
-- Switching Method back and forth
+- Switching Method back and forth quickly (each switch re-creates the Metal windows)
 
 Repeat the run on M1/M2 (500 nit), M3 (600 nit), M4/M5 (1000 nit outdoor) and M5 Pro/Max (gamma disabled).
 
