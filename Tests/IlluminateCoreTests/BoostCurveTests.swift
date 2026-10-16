@@ -40,10 +40,9 @@ import Testing
         #expect(abs(curve.gain(level: level, maximumGain: 2.0) - expected) < 1e-9)
     }
 
-    @Test(arguments: [-0.5, 1.5])
-    func `level is clamped`(level: Double) {
-        let gain = curve.gain(level: level, maximumGain: 2.0)
-        #expect(gain >= 1.0 && gain <= 2.0)
+    @Test(arguments: [(-0.5, 1.0), (1.5, 2.0)])
+    func `level is clamped to the slider range`(level: Double, expected: Double) {
+        #expect(curve.gain(level: level, maximumGain: 2.0) == expected)
     }
 }
 
@@ -56,5 +55,15 @@ import Testing
 
     @Test func `no estimate without engaged headroom`() {
         #expect(NitsEstimate(panelPeakNits: 1600, headroom: 1.0) == nil)
+    }
+
+    @Test func `headroom must clear the engagement threshold`() {
+        // Below 1.05 the headroom is noise around SDR, not a reading of SDR white.
+        #expect(NitsEstimate(panelPeakNits: 1600, headroom: 1.05) == nil)
+        #expect(NitsEstimate(panelPeakNits: 1600, headroom: 1.06) != nil)
+    }
+
+    @Test func `unknown panel peak gives no estimate`() {
+        #expect(NitsEstimate(panelPeakNits: 0, headroom: 3.2) == nil)
     }
 }

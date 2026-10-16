@@ -29,6 +29,14 @@ import Testing
         #expect(try JSONDecoder().decode(Preferences.self, from: data).level == 1)
     }
 
+    @Test(arguments: [(1.2, 1.0), (-0.3, 0.0), (0.7, 0.7)])
+    func `level is clamped on assignment`(assigned: Double, expected: Double) {
+        // The hotkeys step the level by ±0.1 and rely on this clamp at both ends.
+        var preferences = Preferences()
+        preferences.level = assigned
+        #expect(preferences.level == expected)
+    }
+
     @Test func `explicit null disables the battery rule`() throws {
         let data = Data(#"{"batteryThreshold": null}"#.utf8)
         #expect(try JSONDecoder().decode(Preferences.self, from: data).batteryThreshold == nil)

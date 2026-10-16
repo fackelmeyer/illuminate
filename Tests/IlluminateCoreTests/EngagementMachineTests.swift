@@ -109,4 +109,40 @@ import Testing
         #expect(machine.phase == .ready)
         #expect(machine.failures == 0)
     }
+
+    @Test func `headroom during cooldown makes it ready`() {
+        var machine = EngagementMachine(configuration: config)
+        machine.start(at: t0)
+        machine.observe(headroom: 1.0, at: t0 + 26)
+        machine.observe(headroom: 2.0, at: t0 + 30)
+        #expect(machine.phase == .ready)
+        #expect(machine.failures == 0)
+    }
+
+    @Test func `timeout and cooldown boundaries`() {
+        var machine = EngagementMachine(configuration: config)
+        machine.start(at: t0)
+        machine.observe(headroom: 1.0, at: t0 + 25)   // exactly the timeout: still waiting
+        #expect(machine.phase == .engaging(since: t0))
+        machine.observe(headroom: 1.0, at: t0 + 25.5)
+        #expect(machine.phase == .cooldown(until: t0 + 55.5))
+        machine.observe(headroom: 1.0, at: t0 + 55.5)   // cooldown over at exactly `until`
+        #expect(machine.phase == .engaging(since: t0 + 55.5))
+    }
+
+    @Test func `start after isolation retries from scratch`() {
+        var machine = EngagementMachine(configuration: config)
+        var now = t0
+        machine.start(at: now)
+        for _ in 0..<3 {
+            now += 26
+            machine.observe(headroom: 1.0, at: now)
+            now += 31
+            machine.observe(headroom: 1.0, at: now)
+        }
+        #expect(machine.phase == .isolated)
+        machine.start(at: now)
+        #expect(machine.phase == .engaging(since: now))
+        #expect(machine.failures == 0)
+    }
 }

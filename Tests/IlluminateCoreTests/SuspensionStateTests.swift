@@ -2,7 +2,7 @@ import Testing
 @testable import IlluminateCore
 
 @Suite struct SuspensionStateTests {
-    @Test func `starts active`() {
+    @Test func `starts unsuspended`() {
         let state = SuspensionState()
         #expect(state.isSuspended == false)
         #expect(state.reasons.isEmpty)
