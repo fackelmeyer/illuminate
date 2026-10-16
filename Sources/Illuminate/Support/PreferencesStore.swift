@@ -1,5 +1,6 @@
 import Foundation
 import IlluminateCore
+import os
 
 /// Persists `Preferences` as one JSON blob, so a write is atomic.
 struct PreferencesStore {

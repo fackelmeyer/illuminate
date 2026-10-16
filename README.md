@@ -6,7 +6,7 @@ On a MacBook Pro with a Liquid Retina XDR panel, macOS caps desktop content at 5
 
 ## Requirements
 
-- macOS 14 or later, Xcode 26+ toolchain (Swift 6.2+)
+- macOS 14 or later to run; Xcode 27 or later (Swift 6.4) to build
 - A display that reports `maximumPotentialExtendedDynamicRangeColorComponentValue ≥ 2`: MacBook Pro 14"/16" (M1 Pro or later), Pro Display XDR, Studio Display XDR. Other HDR monitors may work but have not been tested.
 
 ## Install

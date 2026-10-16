@@ -8,7 +8,7 @@ final class PowerMonitor {
     var onChange: (PowerStatus) -> Void = { _ in }
 
     private var runLoopSource: CFRunLoopSource?
-    private var lowPowerObservation: NSObjectProtocol?
+    private var lowPowerObservation: (any NSObjectProtocol)?
 
     func start() {
         let context = Unmanaged.passUnretained(self).toOpaque()

@@ -1,6 +1,7 @@
 import AppKit
 import CoreGraphics
 import IlluminateCore
+import os
 
 /// Turns the system notifications that affect EDR into two signals:
 /// suspension changes and "displays need re-applying".
@@ -14,7 +15,7 @@ final class SystemEventMonitor {
     /// Display set, arrangement or colour state may have changed; rebuild and re-apply.
     var onDisplaysChanged: () -> Void = {}
 
-    private var observations: [(NotificationCenter, NSObjectProtocol)] = []
+    private var observations: [(NotificationCenter, any NSObjectProtocol)] = []
     private var debounce: DispatchWorkItem?
 
     func start() {

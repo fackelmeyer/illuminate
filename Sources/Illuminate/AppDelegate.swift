@@ -1,5 +1,6 @@
 import AppKit
 import IlluminateCore
+import os
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var controller: BoostController?

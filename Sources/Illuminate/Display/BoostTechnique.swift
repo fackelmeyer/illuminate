@@ -1,5 +1,6 @@
 import AppKit
 import IlluminateCore
+import os
 
 /// One way of turning EDR headroom into brighter SDR content on one display.
 ///

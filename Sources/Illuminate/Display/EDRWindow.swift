@@ -1,6 +1,7 @@
 import AppKit
 import Metal
 import QuartzCore
+import os
 
 /// A borderless, click-through window whose only content is a `CAMetalLayer`
 /// cleared to a single colour with EDR enabled.

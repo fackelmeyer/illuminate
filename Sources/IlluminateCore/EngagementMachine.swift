@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /// Tracks whether a display has granted EDR headroom after we asked for it.
 ///

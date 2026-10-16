@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import IlluminateCore
+import os
 
 /// Owns one display's transfer table: captures the baseline, writes scaled
 /// versions, detects drift, and restores.

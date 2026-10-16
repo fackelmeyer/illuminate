@@ -1,5 +1,6 @@
 import AppKit
 import IlluminateCore
+import os
 
 /// What the menu shows for one display.
 struct DisplayStatus: Equatable {

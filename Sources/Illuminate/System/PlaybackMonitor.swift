@@ -1,6 +1,7 @@
 import Foundation
 import IOKit.pwr_mgt
 import IlluminateCore
+import os
 
 /// Polls display-sleep power assertions to guess whether video is playing.
 ///

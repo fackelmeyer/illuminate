@@ -1,6 +1,7 @@
 import Foundation
 import IlluminateCore
 import ServiceManagement
+import os
 
 /// Launch at login via `SMAppService.mainApp`. The state always comes from the
 /// system, never from a stored flag, because the user can change it in System Settings.

@@ -1,5 +1,6 @@
 import AppKit
 import IlluminateCore
+import os
 
 /// The app's single source of truth: preferences, suspension reasons and
 /// one `DisplayBooster` per eligible display.

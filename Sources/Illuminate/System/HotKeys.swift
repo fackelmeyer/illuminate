@@ -1,4 +1,5 @@
 import Carbon.HIToolbox
+import os
 
 /// Global hotkeys via Carbon's `RegisterEventHotKey`.
 ///
