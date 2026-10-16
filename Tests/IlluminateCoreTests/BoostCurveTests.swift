@@ -40,6 +40,24 @@ import Testing
         #expect(abs(curve.gain(level: level, maximumGain: 2.0) - expected) < 1e-9)
     }
 
+    @Test func `target gain at full level is the sustainable maximum`() {
+        #expect(abs(curve.targetGain(level: 1, headroom: 3.2) - 1.92) < 1e-9)
+        #expect(curve.targetGain(level: 0, headroom: 3.2) == 1.0)
+    }
+
+    @Test func `target gain applies the nits cap for a known panel`() {
+        // 1600 nit panel at headroom 3.2: SDR white is 500 nit, so 800 nit allows 1.6x.
+        let capped = BoostCurve(nitsCap: 800)
+        #expect(abs(capped.targetGain(level: 1, headroom: 3.2, panelPeakNits: 1600) - 1.6) < 1e-9)
+        #expect(abs(capped.targetGain(level: 1, headroom: 3.2) - 1.92) < 1e-9)
+    }
+
+    @Test func `target gain never exceeds headroom or darkens`() {
+        let greedy = BoostCurve(sustainedFraction: 2, maximumFactor: nil)
+        #expect(greedy.targetGain(level: 1, headroom: 1.5) == 1.5)
+        #expect(curve.targetGain(level: 1, headroom: 0.8) == 1.0)
+    }
+
     @Test(arguments: [(-0.5, 1.0), (1.5, 2.0)])
     func `level is clamped to the slider range`(level: Double, expected: Double) {
         #expect(curve.gain(level: level, maximumGain: 2.0) == expected)

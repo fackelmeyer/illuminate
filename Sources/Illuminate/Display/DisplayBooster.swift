@@ -72,16 +72,10 @@ final class DisplayBooster {
             Log.display.info("\(self.profile.name, privacy: .public): \(String(describing: self.machine.phase), privacy: .public), headroom \(self.headroom)")
         }
 
-        let target: Double
-        if machine.phase == .ready {
-            let nits = profile.panelPeakNits.flatMap { NitsEstimate(panelPeakNits: $0, headroom: headroom) }
-            let maximum = curve.maximumGain(headroom: headroom, sdrWhiteNits: nits?.sdrWhiteNits)
-            // Never exceed the live headroom: anything above it would clip.
-            target = min(curve.gain(level: level, maximumGain: maximum), headroom)
-        } else {
-            // Without headroom, any gain above 1 clips to a flat, washed-out image.
-            target = 1
-        }
+        // Without headroom, any gain above 1 clips to a flat, washed-out image.
+        let target = machine.phase == .ready
+            ? curve.targetGain(level: level, headroom: headroom, panelPeakNits: profile.panelPeakNits)
+            : 1
         if abs(target - gain) > 0.001 {
             gain = target
             technique.apply(gain: gain)

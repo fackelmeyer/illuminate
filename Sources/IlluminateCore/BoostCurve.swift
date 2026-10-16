@@ -42,6 +42,19 @@ public struct BoostCurve: Equatable, Sendable {
         let level = min(max(level, 0), 1)
         return 1 + level * (max(maximumGain, 1) - 1)
     }
+
+    /// The gain to apply on a display whose EDR headroom is engaged.
+    ///
+    /// - Parameters:
+    ///   - level: slider level in `0...1`.
+    ///   - headroom: the live headroom.
+    ///   - panelPeakNits: the panel's peak, if known; lets `nitsCap` apply.
+    public func targetGain(level: Double, headroom: Double, panelPeakNits: Double? = nil) -> Double {
+        let nits = panelPeakNits.flatMap { NitsEstimate(panelPeakNits: $0, headroom: headroom) }
+        let maximum = maximumGain(headroom: headroom, sdrWhiteNits: nits?.sdrWhiteNits)
+        // Never exceed the live headroom: anything above it would clip. Never darken either.
+        return min(gain(level: level, maximumGain: maximum), max(headroom, 1))
+    }
 }
 
 /// Converts headroom into absolute luminance for panels with a known peak.
