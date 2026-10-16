@@ -14,8 +14,10 @@ OUT_DIR="${OUT_DIR:-build}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 APP="$OUT_DIR/Illuminate.app"
 
-swift build -c "$CONFIG" --product Illuminate
-BIN_DIR="$(swift build -c "$CONFIG" --show-bin-path)"
+# Universal: the Pro Display XDR also runs on Intel Mac Pros with macOS 14.
+ARCH_FLAGS=(--arch arm64 --arch x86_64)
+swift build -c "$CONFIG" "${ARCH_FLAGS[@]}" --product Illuminate
+BIN_DIR="$(swift build -c "$CONFIG" "${ARCH_FLAGS[@]}" --show-bin-path)"
 
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
