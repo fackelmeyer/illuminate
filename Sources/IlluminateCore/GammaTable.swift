@@ -48,6 +48,15 @@ public struct GammaTable: Equatable, Sendable {
         return peak < 0.01
     }
 
+    /// The table to scale after reading `table` from a display.
+    ///
+    /// A broken reading never becomes the reference: the previous baseline still holds
+    /// the user's calibration, and a linear ramp is the last resort.
+    public static func baseline(reading table: GammaTable, previous: GammaTable?) -> GammaTable {
+        guard table.isDegenerate else { return table }
+        return previous ?? .identity(count: table.count)
+    }
+
     public func isApproximatelyEqual(to other: GammaTable, tolerance: Float = 1e-3) -> Bool {
         guard count == other.count else { return false }
         func close(_ a: [Float], _ b: [Float]) -> Bool {

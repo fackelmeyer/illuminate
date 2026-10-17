@@ -55,4 +55,21 @@ import Testing
     @Test func `tables of different length are not equal`() {
         #expect(identity.isApproximatelyEqual(to: .identity(count: 128)) == false)
     }
+
+    @Test func `a valid reading becomes the baseline`() {
+        let calibrated = identity.scaled(by: 0.9)
+        #expect(GammaTable.baseline(reading: calibrated, previous: identity) == calibrated)
+    }
+
+    @Test func `a black reading keeps the previous baseline`() {
+        // The previous baseline still holds the user's calibration; a linear ramp would lose it.
+        let calibrated = identity.scaled(by: 0.9)
+        let black = identity.scaled(by: 0)
+        #expect(GammaTable.baseline(reading: black, previous: calibrated) == calibrated)
+    }
+
+    @Test func `a black reading without a previous baseline falls back to identity`() {
+        let black = identity.scaled(by: 0)
+        #expect(GammaTable.baseline(reading: black, previous: nil) == identity)
+    }
 }

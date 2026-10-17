@@ -26,15 +26,10 @@ final class GammaController {
     /// Reads the current table as the baseline to scale. Call before the first `apply`.
     @discardableResult
     func captureBaseline() -> Bool {
-        guard var table = read() else { return false }
-        if table.isDegenerate {
-            // Ask ColorSync for the real profile first, so a later restore
-            // writes the user's calibration rather than a linear ramp.
-            CGDisplayRestoreColorSyncSettings()
-            table = read() ?? table
-        }
-        // Never adopt a broken table as the reference; fall back to a linear ramp.
-        baseline = table.isDegenerate ? .identity(count: table.count) : table
+        guard let table = read() else { return false }
+        // Repairs stay local to this display: `CGDisplayRestoreColorSyncSettings`
+        // would also reset every other display's table.
+        baseline = .baseline(reading: table, previous: baseline)
         return true
     }
 
