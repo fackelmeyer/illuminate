@@ -125,7 +125,7 @@ Any state returns to `idle` when the boost stops. Timeouts use a monotonic clock
 
 - **Pausing:** Pause reasons form a *set*, so the boost resumes only when every reason has cleared, not when the screen saver stops while the screen is still locked.
 - **Power:** By default the boost pauses on battery below 20 % and in Low Power Mode. Both rules can be changed in the menu.
-- **Video:** When a player holds a display-sleep power assertion, the gain drops to 1. The overlay stays up so headroom isn't lost.
+- **Video:** Active display-sleep assertions must persist for 4 seconds before the boost fades out over 1 second. The boost fades back in after 10 seconds without playback, bridging short assertion gaps during app switching. Failed assertion queries preserve the current state. The overlay stays up so headroom isn't lost.
 - **Gamma safety:**
   - A drift watchdog runs every 5 s and accounts for readback clamping at 1.0. When macOS or another app replaces the table, Illuminate boosts the new table instead of reverting it.
   - An all-black ("zero gamma") table is repaired from the last good baseline, without touching other displays.

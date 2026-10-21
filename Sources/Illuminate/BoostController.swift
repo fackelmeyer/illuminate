@@ -27,6 +27,7 @@ final class BoostController {
     private var burstUntil = ContinuousClock.now
     private var lastStatuses: [DisplayStatus] = []
     private var power: PowerStatus?
+    private var playbackDimming = PlaybackDimming()
 
     init(store: PreferencesStore = PreferencesStore(), cpuBrand: String) {
         self.store = store
@@ -112,10 +113,6 @@ final class BoostController {
 
     // MARK: Internals
 
-    private var effectiveLevel: Double {
-        isPlaybackLikely && preferences.reduceDuringPlayback ? 0 : preferences.level
-    }
-
     /// Re-derives the battery and Low Power Mode reasons. Returns whether suspension changed.
     @discardableResult
     private func refreshPowerReasons() -> Bool {
@@ -188,6 +185,8 @@ final class BoostController {
     /// Samples every display once. Returns the delay until the next sample.
     private func tick() -> Duration {
         let now = ContinuousClock.now
+        playbackDimming.setReduced(isPlaybackLikely && preferences.reduceDuringPlayback, at: now)
+        let effectiveLevel = preferences.level * playbackDimming.factor(at: now)
         let screens = Dictionary(NSScreen.screens.compactMap { s in s.displayID.map { ($0, s) } }, uniquingKeysWith: { a, _ in a })
         for (id, booster) in boosters {
             guard let screen = screens[id] else { continue }
